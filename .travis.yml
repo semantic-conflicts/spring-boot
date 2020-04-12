@@ -1,12 +1,26 @@
+
+sudo: required
 language: java
+
 jdk:
-  - oraclejdk8
-services:
-  - mongodb
-  - redis
-sudo: false
-install: true
-before_script:
-- mvn install -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true || true
-- mvn install -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
-script: mvn install -q -nsu -Dmaven.test.redirectTestOutputToFile=true -P '!integration'
+  - openjdk8
+
+script:
+  - mvn clean compile package assembly:single -DskipTests
+
+before_deploy:
+    - mkdir MiningBuild
+    - find . -name '*.jar' -exec cp {} ./MiningBuild \;
+    - cd /home/travis/build/semantic-conflicts/spring-boot/MiningBuild
+    - tar -zcvf result.tar.gz *
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file: result.tar.gz
+  name: fetchjar-ea8107b6a53fa60b5f23b33e1b6d2e88bb60133c
+  file_glob: true
+  overwrite: true
+  skip_cleanup: true
+  on:
+    all_branches: true 
+            
