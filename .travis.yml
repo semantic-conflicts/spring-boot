@@ -1,14 +1,26 @@
-language: java
-jdk:
-  - oraclejdk8
-services:
-  - mongodb
-  - redis
-  - cassandra
+
 sudo: required
-cache:
-  directories:
-    - $HOME/.m2
-install: true
-before_script: travis_wait 45 ./mvnw install -q -U -DskipTests=true -Pfast -Dmaven.test.redirectTestOutputToFile=true
-script: ./mvnw install -q -nsu -Dmaven.test.redirectTestOutputToFile=true -P '!integration'
+language: java
+
+jdk:
+  - openjdk8
+
+script:
+  - mvn clean compile package assembly:single -DskipTests
+
+before_deploy:
+    - mkdir MiningBuild
+    - find . -name '*.jar' -exec cp {} ./MiningBuild \;
+    - cd /home/travis/build/semantic-conflicts/spring-boot/MiningBuild
+    - tar -zcvf result.tar.gz *
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file: result.tar.gz
+  name: fetchjar-fce17ca6d9
+  file_glob: true
+  overwrite: true
+  skip_cleanup: true
+  on:
+    all_branches: true 
+            
